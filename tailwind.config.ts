@@ -8,10 +8,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+        plomo: "#C2C2C2",
+        plomoClaro: "#CCCCCC",
+      },
       backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        banner: "url('/home/assets/bg.jpg')",
+      },
+      boxShadow: {
+        light: "0px 4px 30px rgba(0, 0, 0, 0.08)",
       },
     },
   },
