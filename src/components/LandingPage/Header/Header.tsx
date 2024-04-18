@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CiMenuFries } from "react-icons/ci";
 import { BsTelephone } from "react-icons/bs";
 import { MdClose } from "react-icons/md";
-import { LoginModal } from "@/components/LoginModal";
+import LoginModal from "@/app/login/page";
 
 export function Header() {
 	const [showModal, setShowModal] = useState(false);
@@ -60,7 +60,7 @@ export function Header() {
 									onClick={closeModal}>
 									<MdClose />
 								</span>
-								<LoginModal />
+								<LoginModal onClose={closeModal} />
 							</div>
 						</div>
 					)}

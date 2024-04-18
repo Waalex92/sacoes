@@ -1,3 +1,4 @@
+"use client";
 import "../app/globals.css";
 import { About } from "@/components/LandingPage/About";
 import { Banner } from "@/components/LandingPage/Banner";

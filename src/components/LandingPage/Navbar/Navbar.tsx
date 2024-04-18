@@ -8,6 +8,19 @@ import { motion } from "framer-motion";
 export function Navbar(props: NavbarProps) {
 	const { openMobileMenu } = props;
 	const [isScrolling, setIsScrolling] = useState(false);
+	const handleScroll = () => {
+		if (window.scrollY >= window.innerHeight - 600) {
+			setIsScrolling(true);
+		} else {
+			setIsScrolling(false);
+		}
+	};
+	useEffect(() => {
+		window.addEventListener("scroll", handleScroll);
+		return () => {
+			window.removeEventListener("scroll", handleScroll);
+		};
+	}, []);
 
 	return (
 		<AnimatePresence>
