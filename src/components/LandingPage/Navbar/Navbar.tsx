@@ -31,13 +31,13 @@ export function Navbar(props: NavbarProps) {
 					initial="initial"
 					animate="animate"
 					exit="exit"
-					className="ml-auto mr-auto md:fixed z-[9999] right-0 left-0 px-6 py-3 bg-gray-400/25 rounded-3xl backdrop-blur w-fit">
+					className="ml-auto mr-auto md:fixed z-[9999] right-0 left-0 px-6 py-3 bg-claro1/20 rounded-3xl backdrop-blur w-fit">
 					<div className="items-center hidden gap-5 md:flex">
 						{dataHeader.map(({ id, name, link }) => (
 							<Link
 								key={id}
 								href={link}
-								className="hover:text-white hover:border-b-[1px] hover:border-white text-xl">
+								className="text-claro3 hover:border-b-[1px] hover:border-claro3 text-xl">
 								{name}
 							</Link>
 						))}
@@ -47,14 +47,14 @@ export function Navbar(props: NavbarProps) {
 				<div
 					className={`${
 						openMobileMenu
-							? "absolute z-[1] left-0 top-32 bg-white r-0 w-full px-4 py-4"
+							? "absolute z-[1] left-0 top-32 bg-verde/65 r-0 w-auto px-4 py-4 ml-3"
 							: "hidden"
 					} gap-5 md:flex`}>
 					{dataHeader.map(({ id, name, link }) => (
 						<Link
 							href={link}
 							key={id}
-							className="block hover:text-plomo hover:border-b-[1px] text-2xl ">
+							className="block text-claro3 hover:border-b-[1px] text-2xl ">
 							{name}
 						</Link>
 					))}

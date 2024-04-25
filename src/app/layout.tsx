@@ -20,9 +20,7 @@ export default function RootLayout({
 		<html lang="en">
 			<body className={montserrat.className}>
 				<Providers>
-					<main className="container">
-						<SessionAuthProvider>{children}</SessionAuthProvider>
-					</main>
+					<SessionAuthProvider>{children}</SessionAuthProvider>
 				</Providers>
 			</body>
 		</html>

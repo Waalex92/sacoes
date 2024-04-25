@@ -10,12 +10,14 @@ import { Serv } from "@/components/LandingPage/Serv";
 export default function Home() {
 	return (
 		<>
-			<Header />
-			<Banner />
-			<Serv />
-			<About />
-			<JoinCommunity />
-			<Footer />
+			<main className="">
+				<Header />
+				<Banner />
+				<Serv />
+				<About />
+				<JoinCommunity />
+				<Footer />
+			</main>
 		</>
 	);
 }

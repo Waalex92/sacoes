@@ -9,8 +9,8 @@ import Link from "next/link";
 
 export function Footer() {
 	return (
-		<div className=" flex flex-col-reverse px-6 py-6 bg-black/90">
-			<div className="grid gap-6 grid-cols-3 md:grid-cols-[1fr,1fr,_350px] text-white">
+		<div className=" flex flex-col-reverse px-6 py-6 bg-morado1">
+			<div className="grid gap-6 grid-cols-3 md:grid-cols-[1fr,1fr,_350px] text-claro3">
 				{dataFooter.map(({ id, links }) => (
 					<div key={id}>
 						{links.map(({ id, name, link }) => (

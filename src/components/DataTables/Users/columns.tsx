@@ -1,6 +1,7 @@
 import React from "react";
 import { User, Tooltip } from "@nextui-org/react";
-import { DeleteIcon, EditIcon, EyeIcon } from "../../../icons/icons";
+import { EditIcon, EyeIcon } from "../../../icons/icons";
+import { Switch } from "@nextui-org/react";
 
 export type User = {
 	id: string;
@@ -8,11 +9,11 @@ export type User = {
 	email: string;
 	image: string;
 	lasname: string;
+	active: boolean;
 };
 interface ColumnsProps {
 	items: User[];
 	emptyContent: string;
-	onEditClick: (user: User) => void;
 }
 
 export const columns = [
@@ -45,10 +46,6 @@ export const columns = [
 		label: "ROLE",
 	},
 	{
-		key: "active",
-		label: "ACTIVE",
-	},
-	{
 		key: "actions",
 		label: "Actions",
 	},
@@ -58,7 +55,10 @@ export const renderCell = (
 	user: User,
 	columnKey: React.Key,
 	handleEditClick: (user: User) => void,
-	openEditModal: any
+	handleViewClick: (user: User) => void,
+	openEditModal: any,
+	openViewModa: any,
+	toggleUserActive: (user: User) => void
 ) => {
 	const cellValue = user[columnKey as keyof User];
 
@@ -76,7 +76,9 @@ export const renderCell = (
 			return (
 				<div className="relative flex items-center gap-4">
 					<Tooltip content="Details">
-						<span className="cursor-pointer text-lg text-default-400 active:opacity-50">
+						<span
+							className="cursor-pointer text-lg text-default-400 active:opacity-50"
+							onClick={() => handleViewClick(user)}>
 							<EyeIcon />
 						</span>
 					</Tooltip>
@@ -87,9 +89,12 @@ export const renderCell = (
 							<EditIcon />
 						</span>
 					</Tooltip>
-					<Tooltip color="danger" content="Delete user">
+					<Tooltip color="danger" content="Enable/Disable user">
 						<span className="cursor-pointer text-lg text-danger active:opacity-50">
-							<DeleteIcon />
+							<Switch
+								isSelected={user.active}
+								onChange={() => toggleUserActive(user)}
+								color="secondary"></Switch>
 						</span>
 					</Tooltip>
 				</div>

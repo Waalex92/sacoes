@@ -1,6 +1,5 @@
 "use client";
-import { useSession } from "next-auth/react";
-import { useCallback, useMemo, useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
 	Table,
 	TableHeader,
@@ -13,102 +12,82 @@ import {
 	SortDescriptor,
 	Button,
 } from "@nextui-org/react";
-import { User, columns, renderCell } from "./columns";
+import { Order, columns, renderCell } from "./columns";
 import { SearchIcon, PlusIcon } from "../../../icons/icons";
-import EditModal from "@/components/Modals/Users/EditModal";
-import ViewModal from "@/components/Modals/Users/ViewModal";
-import NewUserModal from "@/components/Modals/Users/NewUserModal";
+import EditModal from "@/components/Modals/Orders/EditModal";
+import ViewModal from "@/components/Modals/Orders/ViewModal";
+import NewOrderModal from "@/components/Modals/Orders/NewOrderModal";
 import axios from "axios";
 
 interface TableBodyProps<T> {
 	items: T[];
 	emptyContent: string;
-	handleEditClick: (user: T) => void;
-	handleViewClick: (user: T) => void;
+	handleEditClick: (order: T) => void;
+	handleViewClick: (order: T) => void;
 }
 
-export default function UserTable({ users }: { users: User[] }) {
-	const { data: session, status } = useSession();
+export default function OrderTable({ orders }: { orders: Order[] }) {
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [viewModalOpen, setViewModalOpen] = useState(false);
-	const [newUserModalOpen, setNewUserModalOpen] = useState(false);
-	const [selectedUser, setSelectedUser] = useState<User | null>(null);
+	const [newOrderModalOpen, setNewOrderModalOpen] = useState(false);
+	//const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 	const [filterValue, setFilterValue] = useState("");
 	const hasSearchFilter = Boolean(filterValue);
 
-	const handleNewUserClick = () => {
-		setNewUserModalOpen(true);
+	const handleNewOrderClick = () => {
+		setNewOrderModalOpen(true);
 	};
 
-	const toggleUserActive = async (user: User) => {
-		try {
-			const response = await axios.patch(
-				user.active
-					? `http://sacoes11.test/api/users/${user.id}/disable`
-					: `http://sacoes11.test/api/users/${user.id}/enable`,
-				{},
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Accept: "application/json",
-						authorization: `Bearer ${session?.user?.token}`,
-					},
-				}
-			);
-			setSelectedUser((prevUser) =>
-				prevUser ? { ...prevUser, active: !prevUser.active } : null
-			);
-			window.location.reload();
-		} catch (error) {
-			console.error("Error:", error);
-		}
-	};
-
-	const handleEditClick = (user: User) => {
-		setSelectedUser(user);
+	const handleEditClick = (order: Order) => {
+		//setSelectedOrder(order);
 		setEditModalOpen(true);
 	};
 
-	const handleViewClick = (user: User) => {
-		setSelectedUser(user);
+	const handleViewClick = (order: Order) => {
+		//setSelectedOrder(order);
 		setViewModalOpen(true);
 	};
 
 	const handleCloseEditModal = () => {
-		setSelectedUser(null);
+		//setSelectedOrder(null);
 		setEditModalOpen(false);
 	};
 	const handleCloseViewModal = () => {
-		setSelectedUser(null);
+		//setSelectedOrder(null);
 		setViewModalOpen(false);
 	};
 
 	const filteredItems = useMemo(() => {
-		let filteredUsers = [...users];
+		let filteredOrders = [...orders];
 		if (hasSearchFilter) {
-			filteredUsers = filteredUsers.filter((user) =>
-				user.name.toLowerCase().includes(filterValue.toLowerCase())
+			filteredOrders = filteredOrders.filter((order) =>
+				order.description
+					.toLowerCase()
+					.includes(filterValue.toLowerCase())
 			);
 		}
-		return filteredUsers;
-	}, [users, filterValue, hasSearchFilter]);
+		return filteredOrders;
+	}, [orders, filterValue, hasSearchFilter]);
+
 	const rowsPerPage = 7;
 	const [page, setPage] = useState(1);
 	const pages = Math.ceil(filteredItems.length / rowsPerPage);
+
 	const items = useMemo(() => {
 		const start = (page - 1) * rowsPerPage;
 		const end = start + rowsPerPage;
 		return filteredItems.slice(start, end);
 	}, [page, filteredItems]);
+
 	const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-		column: "name",
+		column: "description",
 		direction: "ascending",
 	});
 
 	const sortedItems = useMemo(() => {
-		return [...items].sort((a: User, b: User) => {
-			const first = a[sortDescriptor.column as keyof User] as string;
-			const second = b[sortDescriptor.column as keyof User] as string;
+		return [...items].sort((a: Order, b: Order) => {
+			const first = a[sortDescriptor.column as keyof Order] as string;
+			const second = b[sortDescriptor.column as keyof Order] as string;
 			const cmp = first < second ? -1 : first > second ? 1 : 0;
 			return sortDescriptor.direction === "descending" ? -cmp : cmp;
 		});
@@ -134,17 +113,17 @@ export default function UserTable({ users }: { users: User[] }) {
 				<div className="flex items-center justify-between">
 					<Input
 						isClearable
-						className="sm:w-full max-w-[50%]"
-						placeholder="Search by name..."
 						startContent={<SearchIcon />}
+						className="sm:w-full max-w-[50%]"
+						placeholder="Search by description..."
 						value={filterValue}
 						onClear={() => onClear()}
 						onValueChange={onSearchChange}
 					/>
 					<Button
 						color="secondary"
-						endContent={<PlusIcon />}
-						onClick={handleNewUserClick}>
+						onClick={handleNewOrderClick}
+						endContent={<PlusIcon />}>
 						New
 					</Button>
 				</div>
@@ -156,7 +135,7 @@ export default function UserTable({ users }: { users: User[] }) {
 		<>
 			<Table
 				isStriped
-				aria-label="Users table"
+				aria-label="Orders table"
 				topContent={topContent}
 				topContentPlacement="outside"
 				bottomContent={
@@ -182,7 +161,7 @@ export default function UserTable({ users }: { users: User[] }) {
 					{(column) => (
 						<TableColumn
 							key={column.key}
-							{...(column.key === "name"
+							{...(column.key === "description"
 								? { allowsSorting: true }
 								: {})}>
 							{column.label}
@@ -191,19 +170,18 @@ export default function UserTable({ users }: { users: User[] }) {
 				</TableHeader>
 				<TableBody
 					items={sortedItems}
-					emptyContent={"No users to display."}>
-					{(user) => (
-						<TableRow key={user.id}>
+					emptyContent={"No orders to display."}>
+					{(order) => (
+						<TableRow key={order.id}>
 							{(columnKey) => (
 								<TableCell>
 									{renderCell(
-										user,
+										order,
 										columnKey,
 										handleEditClick,
 										handleViewClick,
 										editModalOpen,
-										viewModalOpen,
-										toggleUserActive
+										viewModalOpen
 									)}
 								</TableCell>
 							)}
@@ -211,20 +189,23 @@ export default function UserTable({ users }: { users: User[] }) {
 					)}
 				</TableBody>
 			</Table>
+			{/**  
 			<EditModal
 				isOpen={editModalOpen}
 				onClose={handleCloseEditModal}
-				user={selectedUser}
+				//order={selectedOrder}
 			/>
 			<ViewModal
 				isOpen={viewModalOpen}
 				onClose={handleCloseViewModal}
-				userId={selectedUser ? selectedUser.id : ""}
+				//orderId={selectedOrder ? selectedOrder.id : ""}
 			/>
-			<NewUserModal
-				isOpen={newUserModalOpen}
-				onClose={() => setNewUserModalOpen(false)}
+			<NewOrderModal
+				isOpen={newOrderModalOpen}
+				onClose={() => setNewOrderModalOpen(false)}
 			/>
+			 * 
+			*/}
 		</>
 	);
 }

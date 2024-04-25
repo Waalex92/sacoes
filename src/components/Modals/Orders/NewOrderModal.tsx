@@ -1,5 +1,4 @@
-// EditModal.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import {
@@ -10,45 +9,42 @@ import {
 	ModalFooter,
 	Button,
 	Input,
+	Dropdown,
+	DropdownTrigger,
+	DropdownMenu,
+	DropdownItem,
 } from "@nextui-org/react";
 
-interface EditModalProps {
+interface NewUserModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	user: any;
 }
 
-const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, user }) => {
+const NewUserModal: React.FC<NewUserModalProps> = ({ isOpen, onClose }) => {
 	const { data: session, status } = useSession();
 	const [name, setName] = useState("");
 	const [lastname, setLastname] = useState("");
 	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
 	const [address, setAddress] = useState("");
 	const [phone, setPhone] = useState("");
 	const [cellPhone, setCellPhone] = useState("");
-	const [role, setRole] = useState("");
+	const [selectedKeys, setSelectedKeys] = useState(new Set(["admin"]));
 	const [loading, setLoading] = useState(false);
 	const [errors, setErrors] = useState<string[]>([]);
 
-	useEffect(() => {
-		if (user) {
-			setName(user.name);
-			setLastname(user.lastname);
-			setEmail(user.email);
-			setAddress(user.address);
-			setPhone(user.phone);
-			setCellPhone(user.cellPhone);
-			setRole(user.role);
-		}
-	}, [user]);
+	const selectedValue = React.useMemo(
+		() => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
+		[selectedKeys]
+	);
 
 	const handleSaveChanges = async () => {
 		setLoading(true);
 		setErrors([]);
 
 		try {
-			const response = await axios.patch(
-				`http://sacoes11.test/api/users/${user.id}`,
+			const response = await axios.post(
+				`http://sacoes11.test/api/users`,
 				{
 					name: name,
 					lastname: lastname,
@@ -56,7 +52,9 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, user }) => {
 					address: address,
 					phone: phone,
 					cellPhone: cellPhone,
-					role: role,
+					password: password,
+					active: 1,
+					role: selectedValue,
 				},
 				{
 					headers: {
@@ -67,19 +65,15 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, user }) => {
 				}
 			);
 
-			if (response.data.error) {
-				setErrors([response.data.error]);
+			if (response.data.errors) {
+				setErrors([response.data.errors]);
 			} else {
 				onClose();
 				window.location.reload();
 			}
 		} catch (error: any) {
-			console.error("Error updating user:", error);
-			const errorMessage =
-				typeof error === "string"
-					? error
-					: "An error occurred. Please try again later.";
-			setErrors([errorMessage]);
+			console.log(error.response.data.errors);
+			setErrors(error.response.data);
 		} finally {
 			setLoading(false);
 		}
@@ -89,52 +83,80 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, user }) => {
 		<Modal isOpen={isOpen} onClose={onClose} placement="top-center">
 			<ModalContent>
 				<ModalHeader className="flex flex-col gap-1">
-					Edit User
+					New User
 				</ModalHeader>
 				<ModalBody>
 					<Input
 						autoFocus
-						label="Name"
-						variant="bordered"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
-					/>
-					<Input
-						label="Lastname"
-						variant="bordered"
-						value={lastname}
-						onChange={(e) => setLastname(e.target.value)}
-					/>
-					<Input
+						isRequired
 						label="Email"
 						variant="bordered"
 						value={email}
 						onChange={(e) => setEmail(e.target.value)}
 					/>
 					<Input
+						isRequired
+						label="Password"
+						variant="bordered"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+					/>
+					<Input
+						isRequired
+						label="Name"
+						variant="bordered"
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+					/>
+					<Input
+						isRequired
+						label="Lastname"
+						variant="bordered"
+						value={lastname}
+						onChange={(e) => setLastname(e.target.value)}
+					/>
+					<Input
+						isRequired
 						label="Address"
 						variant="bordered"
 						value={address}
 						onChange={(e) => setAddress(e.target.value)}
 					/>
 					<Input
+						isRequired
 						label="Phone"
 						variant="bordered"
 						value={phone}
 						onChange={(e) => setPhone(e.target.value)}
 					/>
 					<Input
+						isRequired
 						label="CellPhone"
 						variant="bordered"
 						value={cellPhone}
 						onChange={(e) => setCellPhone(e.target.value)}
 					/>
-					<Input
-						label="Role"
-						variant="bordered"
-						value={role}
-						onChange={(e) => setRole(e.target.value)}
-					/>
+					<Dropdown>
+						<DropdownTrigger>
+							<Button variant="bordered" className="capitalize">
+								{selectedValue}
+							</Button>
+						</DropdownTrigger>
+						<DropdownMenu
+							aria-label="Single selection example"
+							variant="flat"
+							disallowEmptySelection
+							selectionMode="single"
+							selectedKeys={selectedKeys}
+							onSelectionChange={setSelectedKeys}>
+							<DropdownItem key="admin">Admin</DropdownItem>
+							<DropdownItem key="sastre">Sastre</DropdownItem>
+							<DropdownItem key="recepcionista">
+								Recepcionista
+							</DropdownItem>
+							<DropdownItem key="cliente">Cliente</DropdownItem>
+						</DropdownMenu>
+					</Dropdown>
 					{errors.length > 0 && (
 						<div
 							style={{
@@ -169,4 +191,4 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, user }) => {
 		</Modal>
 	);
 };
-export default EditModal;
+export default NewUserModal;

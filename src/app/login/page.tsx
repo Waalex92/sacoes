@@ -85,12 +85,12 @@ const LoginModal: React.FC<EditModalProps> = ({ onClose }) => {
 					<ModalFooter>
 						<Button
 							color="danger"
-							variant="ghost"
+							variant="light"
 							onPress={onClose}>
 							Cancel
 						</Button>
 						<Button
-							color="success"
+							color="secondary"
 							variant="ghost"
 							disabled={loading}
 							onPress={handleSubmit}>

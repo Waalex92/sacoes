@@ -25,10 +25,7 @@ const handler = NextAuth({
                     }
                 );
                 const user = await res.json();
-                console.log(user);
-
                 if (user.status === false || user.errors) throw user;
-                console.log(user)
                 return user;
             },
         }),

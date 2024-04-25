@@ -3,9 +3,11 @@ import { Transition } from "../Transition";
 
 export function About() {
 	return (
-		<Transition className="flex flex-col px-4 py-12 md:p-24 md:pb-44 items-center">
-			<div className="flex flex-col items-center text-center" id="about">
-				<h4 className="text-2xl">Sobre nosotros</h4>
+		<Transition className="flex flex-col px-16 py-12 md:p-24 md:pb-44 items-center">
+			<div
+				className="text-claro1 flex flex-col items-center text-center"
+				id="about">
+				<h4 className="font-bold text-2xl">Sobre nosotros</h4>
 				<h2 className="my-2 text-3xl font-semibold">
 					Estamos comprometidos con la excelencia en cada prenda que
 					creamos.

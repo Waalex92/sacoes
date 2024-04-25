@@ -11,8 +11,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        plomo: "#C2C2C2",
-        plomoClaro: "#CCCCCC",
+        morado: "#4C1A57",
+        morado1: "#180421",
+        verde: "#00A8AA",
+        claro1: "#74839b",
+        claro2: "#7a8ea1",
+        claro3: "#a9b6c3",
+        boton: "#3C949E",
+        boton2: "#024F55"
       },
       backgroundImage: {
         banner: "url('/home/assets/bg.jpg')",

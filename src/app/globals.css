@@ -3,18 +3,19 @@
 @tailwind utilities;
 
 html {
-  scroll-behavior: smooth;
+	scroll-behavior: smooth;
+	background-color: black;
 }
 
 .swiper-scrollbar-drag {
-  background: #727c73;
+	background: #727c73;
 }
 
 .leaflet-control-attribution {
-  display: none;
+	display: none;
 }
 
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
-  border-radius: 0.5rem;
+	border-radius: 0.5rem;
 }
