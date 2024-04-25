@@ -1,7 +1,7 @@
-// EditModal.jsx
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import DetailForm from "./DetailForm";
 import {
 	Modal,
 	ModalContent,
@@ -10,71 +10,207 @@ import {
 	ModalFooter,
 	Button,
 	Input,
+	Textarea,
+	Select,
+	SelectItem,
 } from "@nextui-org/react";
 
 interface EditModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	user: any;
+	order: any; // Order type to be defined
 }
 
-const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, user }) => {
+interface Client {
+	id: string;
+	name: string;
+}
+
+interface Sastre {
+	id: string;
+	name: string;
+}
+
+const priorityState = [
+	{ label: "Low", value: "low" },
+	{ label: "Regular", value: "regular" },
+	{ label: "High", value: "high" },
+];
+
+const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, order }) => {
 	const { data: session, status } = useSession();
-	const [name, setName] = useState("");
-	const [lastname, setLastname] = useState("");
-	const [email, setEmail] = useState("");
-	const [address, setAddress] = useState("");
-	const [phone, setPhone] = useState("");
-	const [cellPhone, setCellPhone] = useState("");
-	const [role, setRole] = useState("");
+	const [id, setId] = useState("");
+	const [clientes, setClientes] = useState<Client[]>([]);
+	const [sastres, setSastres] = useState<Sastre[]>([]);
+	const [selectedCliente, setSelectedCliente] = useState("");
+	const [selectedSastre, setSelectedSastre] = useState("");
+	const [startDate, setStartDate] = useState("");
+	const [endDate, setEndDate] = useState("");
+	const [description, setDescription] = useState("");
+	const [details, setDetails] = useState<any[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [errors, setErrors] = useState<string[]>([]);
+	const [priority, setPriority] = React.useState<string>("");
+
+	const handleSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		setPriority(e.target.value);
+	};
+
+	const handleClienteChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		setSelectedCliente(e.target.value);
+	};
+
+	const handleSastreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		setSelectedSastre(e.target.value);
+	};
+
+	const handleDetailChange = (index: number, detail: any) => {
+		const updatedDetails = [...details];
+		updatedDetails[index] = detail;
+		setDetails(updatedDetails);
+	};
+
+	const handleAddDetail = () => {
+		setDetails([...details, { typeGarment: "", quantity: 0, costUnit: 0 }]);
+	};
 
 	useEffect(() => {
-		if (user) {
-			setName(user.name);
-			setLastname(user.lastname);
-			setEmail(user.email);
-			setAddress(user.address);
-			setPhone(user.phone);
-			setCellPhone(user.cellPhone);
-			setRole(user.role);
+		axios
+			.get("http://sacoes11.test/api/users/listClientes", {
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					authorization: `Bearer ${session?.user?.token}`,
+				},
+			})
+			.then((response) => {
+				setClientes(response.data.clientes);
+			})
+			.catch((error) => {
+				console.error("Error fetching clientes:", error);
+			});
+
+		axios
+			.get("http://sacoes11.test/api/users/listSastres", {
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					authorization: `Bearer ${session?.user?.token}`,
+				},
+			})
+			.then((response) => {
+				setSastres(response.data.sastres);
+			})
+			.catch((error) => {
+				console.error("Error fetching sastres:", error);
+			});
+	}, []);
+
+	useEffect(() => {
+		if (order) {
+			setStartDate(order.startDate);
+			setEndDate(order.endDate);
+			setDescription(order.description);
+			setPriority(order.priority);
+			setDetails(order.details);
+			setId(order.id);
+			setSelectedCliente(order.idCliente);
+			setSelectedSastre(order.idSastre);
 		}
-	}, [user]);
+	}, [order]);
 
 	const handleSaveChanges = async () => {
 		setLoading(true);
 		setErrors([]);
 
 		try {
-			const response = await axios.patch(
-				`http://sacoes11.test/api/users/${user.id}`,
-				{
-					name: name,
-					lastname: lastname,
-					email: email,
-					address: address,
-					phone: phone,
-					cellPhone: cellPhone,
-					role: role,
-				},
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Accept: "application/json",
-						authorization: `Bearer ${session?.user?.token}`,
+			const detailsWithOrderId = details.map((detail) => ({
+				...detail,
+				quantity: Number(detail.quantity),
+				costUnit: Number(detail.costUnit),
+				idOrder: order.id,
+			}));
+
+			const promises = [];
+
+			promises.push(
+				axios.patch(
+					`http://sacoes11.test/api/orders/${order.id}`,
+					{
+						id: id,
+						startDate: startDate,
+						endDate: endDate,
+						description: description,
+						priority: priority,
+						idCliente: selectedCliente,
+						idSastre: selectedSastre,
 					},
-				}
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Accept: "application/json",
+							authorization: `Bearer ${session?.user?.token}`,
+						},
+					}
+				)
 			);
 
-			if (response.data.error) {
-				setErrors([response.data.error]);
+			detailsWithOrderId.forEach((detail) => {
+				if (detail.id) {
+					promises.push(
+						axios.patch(
+							`http://sacoes11.test/api/details/${detail.id}`,
+							{
+								typeGarment: detail.typeGarment,
+								quantity: detail.quantity,
+								costUnit: detail.costUnit,
+								idOrder: detail.idOrder,
+							},
+							{
+								headers: {
+									"Content-Type": "application/json",
+									Accept: "application/json",
+									authorization: `Bearer ${session?.user?.token}`,
+								},
+							}
+						)
+					);
+				} else {
+					promises.push(
+						axios.post(
+							`http://sacoes11.test/api/details`,
+							{
+								typeGarment: detail.typeGarment,
+								quantity: detail.quantity,
+								costUnit: detail.costUnit,
+								idOrder: detail.idOrder,
+							},
+							{
+								headers: {
+									"Content-Type": "application/json",
+									Accept: "application/json",
+									authorization: `Bearer ${session?.user?.token}`,
+								},
+							}
+						)
+					);
+				}
+			});
+
+			const responses = await Promise.all(promises);
+
+			if (responses.some((response) => response.data.error)) {
+				setErrors(
+					responses
+						.filter((response) => response.data.error)
+						.map((response) => response.data.error)
+				);
 			} else {
 				onClose();
 				window.location.reload();
 			}
 		} catch (error: any) {
-			console.error("Error updating user:", error);
+			console.error("Error updating order:", error);
 			const errorMessage =
 				typeof error === "string"
 					? error
@@ -86,72 +222,90 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, user }) => {
 	};
 
 	return (
-		<Modal isOpen={isOpen} onClose={onClose} placement="top-center">
-			<ModalContent>
+		<Modal isOpen={isOpen} onClose={onClose} placement="top">
+			<ModalContent className="w-full max-w-xl">
 				<ModalHeader className="flex flex-col gap-1">
-					Edit User
+					Edit Order
 				</ModalHeader>
 				<ModalBody>
 					<Input
-						autoFocus
-						label="Name"
+						label="Start Date"
 						variant="bordered"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
+						value={startDate}
+						onChange={(e) => setStartDate(e.target.value)}
 					/>
 					<Input
-						label="Lastname"
+						label="End Date"
 						variant="bordered"
-						value={lastname}
-						onChange={(e) => setLastname(e.target.value)}
+						value={endDate}
+						onChange={(e) => setEndDate(e.target.value)}
 					/>
-					<Input
-						label="Email"
+					<Textarea
+						label="Description"
 						variant="bordered"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
 					/>
-					<Input
-						label="Address"
+					<Select
+						label="Cliente"
 						variant="bordered"
-						value={address}
-						onChange={(e) => setAddress(e.target.value)}
-					/>
-					<Input
-						label="Phone"
+						placeholder="Select the cliente"
+						selectedKeys={[selectedCliente]}
+						className="max-w-xs"
+						onChange={handleClienteChange}>
+						{clientes.map((cliente) => (
+							<SelectItem key={cliente.id} value={cliente.id}>
+								{cliente.name}
+							</SelectItem>
+						))}
+					</Select>
+					<Select
+						label="Sastre"
 						variant="bordered"
-						value={phone}
-						onChange={(e) => setPhone(e.target.value)}
-					/>
-					<Input
-						label="CellPhone"
+						placeholder="Select the sastre"
+						selectedKeys={[selectedSastre]}
+						className="max-w-xs"
+						onChange={handleSastreChange}>
+						{sastres.map((sastre) => (
+							<SelectItem key={sastre.id} value={sastre.id}>
+								{sastre.name}
+							</SelectItem>
+						))}
+					</Select>
+					<Select
+						label="Priority"
 						variant="bordered"
-						value={cellPhone}
-						onChange={(e) => setCellPhone(e.target.value)}
-					/>
-					<Input
-						label="Role"
-						variant="bordered"
-						value={role}
-						onChange={(e) => setRole(e.target.value)}
-					/>
-					{errors.length > 0 && (
+						placeholder="Select the priority"
+						selectedKeys={[priority]}
+						className="max-w-xs"
+						onChange={handleSelectionChange}
+						value={priority}>
+						{priorityState.map((pri) => (
+							<SelectItem key={pri.value} value={pri.value}>
+								{pri.label}
+							</SelectItem>
+						))}
+					</Select>
+					{details.map((detail, index) => (
 						<div
-							style={{
-								border: "1px solid white",
-								borderRadius: "15px",
-								backgroundColor: "red",
-								color: "white",
-								padding: "10px",
-								marginBottom: "10px",
-							}}>
-							<ul>
-								{errors.map((error, index) => (
-									<li key={index}>{error}</li>
-								))}
-							</ul>
+							key={`detail-${index}`}
+							className="border-2 p-2 rounded-xl">
+							Detail
+							<DetailForm
+								key={index}
+								detail={detail}
+								onChange={(updatedDetail) =>
+									handleDetailChange(index, updatedDetail)
+								}
+							/>
 						</div>
-					)}
+					))}
+					<Button
+						color="secondary"
+						variant="ghost"
+						onPress={handleAddDetail}>
+						Add Detail
+					</Button>
 				</ModalBody>
 				<ModalFooter>
 					<Button color="danger" variant="light" onPress={onClose}>

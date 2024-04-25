@@ -53,7 +53,7 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, userId }) => {
 	}, [isOpen, userId]);
 
 	return (
-		<Modal isOpen={isOpen} onClose={onClose} placement="top-center">
+		<Modal isOpen={isOpen} onClose={onClose} placement="top">
 			<ModalContent>
 				<ModalHeader className="flex flex-col gap-1">
 					User Details

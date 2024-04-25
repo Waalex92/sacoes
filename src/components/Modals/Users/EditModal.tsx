@@ -86,7 +86,7 @@ const EditModal: React.FC<EditModalProps> = ({ isOpen, onClose, user }) => {
 	};
 
 	return (
-		<Modal isOpen={isOpen} onClose={onClose} placement="top-center">
+		<Modal isOpen={isOpen} onClose={onClose} placement="top">
 			<ModalContent>
 				<ModalHeader className="flex flex-col gap-1">
 					Edit User

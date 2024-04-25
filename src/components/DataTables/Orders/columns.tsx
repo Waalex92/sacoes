@@ -28,7 +28,7 @@ export const columns = [
 	{ key: "details", label: "DETAILS" },
 	//{ key: "admin_recepcionista", label: "RECEPCIONIST" },
 	//{ key: "sastre", label: "TAILOR" },
-	//{ key: "description", label: "DESCRIPTION" },
+	{ key: "description", label: "DESCRIPTION" },
 	{ key: "actions", label: "ACTIONS" },
 ];
 

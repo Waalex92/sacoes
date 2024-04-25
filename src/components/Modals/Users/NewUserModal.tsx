@@ -80,7 +80,7 @@ const NewUserModal: React.FC<NewUserModalProps> = ({ isOpen, onClose }) => {
 	};
 
 	return (
-		<Modal isOpen={isOpen} onClose={onClose} placement="top-center">
+		<Modal isOpen={isOpen} onClose={onClose} placement="top">
 			<ModalContent>
 				<ModalHeader className="flex flex-col gap-1">
 					New User

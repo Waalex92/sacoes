@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import DetailForm from "./DetailForm";
 import {
 	Modal,
 	ModalContent,
@@ -9,171 +10,246 @@ import {
 	ModalFooter,
 	Button,
 	Input,
-	Dropdown,
-	DropdownTrigger,
-	DropdownMenu,
-	DropdownItem,
+	Textarea,
+	Select,
+	SelectItem,
 } from "@nextui-org/react";
 
-interface NewUserModalProps {
+interface EditModalProps {
 	isOpen: boolean;
 	onClose: () => void;
 }
 
-const NewUserModal: React.FC<NewUserModalProps> = ({ isOpen, onClose }) => {
+interface Client {
+	id: string;
+	name: string;
+}
+
+interface Sastre {
+	id: string;
+	name: string;
+}
+
+const priorityState = [
+	{ label: "Low", value: "low" },
+	{ label: "Regular", value: "regular" },
+	{ label: "High", value: "high" },
+];
+
+const NewOrderModal: React.FC<EditModalProps> = ({ isOpen, onClose }) => {
 	const { data: session, status } = useSession();
-	const [name, setName] = useState("");
-	const [lastname, setLastname] = useState("");
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
-	const [address, setAddress] = useState("");
-	const [phone, setPhone] = useState("");
-	const [cellPhone, setCellPhone] = useState("");
-	const [selectedKeys, setSelectedKeys] = useState(new Set(["admin"]));
+	const [id, setId] = useState("");
+	const [clientes, setClientes] = useState<Client[]>([]);
+	const [sastres, setSastres] = useState<Sastre[]>([]);
+	const [selectedCliente, setSelectedCliente] = useState("");
+	const [selectedSastre, setSelectedSastre] = useState("");
+	const [startDate, setStartDate] = useState("");
+	const [endDate, setEndDate] = useState("");
+	const [description, setDescription] = useState("");
+	const [details, setDetails] = useState<any[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [errors, setErrors] = useState<string[]>([]);
+	const [priority, setPriority] = React.useState<string>("");
 
-	const selectedValue = React.useMemo(
-		() => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
-		[selectedKeys]
-	);
+	const handleSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		setPriority(e.target.value);
+	};
+
+	const handleClienteChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		setSelectedCliente(e.target.value);
+	};
+
+	const handleSastreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		setSelectedSastre(e.target.value);
+	};
+
+	const handleDetailChange = (index: number, detail: any) => {
+		const updatedDetails = [...details];
+		updatedDetails[index] = detail;
+		setDetails(updatedDetails);
+	};
+
+	const handleAddDetail = () => {
+		setDetails([...details, { typeGarment: "", quantity: 0, costUnit: 0 }]);
+	};
+
+	useEffect(() => {
+		axios
+			.get("http://sacoes11.test/api/users/listClientes", {
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					authorization: `Bearer ${session?.user?.token}`,
+				},
+			})
+			.then((response) => {
+				setClientes(response.data.clientes);
+			})
+			.catch((error) => {
+				console.error("Error fetching clientes:", error);
+			});
+
+		axios
+			.get("http://sacoes11.test/api/users/listSastres", {
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					authorization: `Bearer ${session?.user?.token}`,
+				},
+			})
+			.then((response) => {
+				setSastres(response.data.sastres);
+			})
+			.catch((error) => {
+				console.error("Error fetching sastres:", error);
+			});
+	}, []);
 
 	const handleSaveChanges = async () => {
 		setLoading(true);
 		setErrors([]);
 
 		try {
-			const response = await axios.post(
-				`http://sacoes11.test/api/users`,
-				{
-					name: name,
-					lastname: lastname,
-					email: email,
-					address: address,
-					phone: phone,
-					cellPhone: cellPhone,
-					password: password,
-					active: 1,
-					role: selectedValue,
-				},
-				{
-					headers: {
-						"Content-Type": "application/json",
-						Accept: "application/json",
-						authorization: `Bearer ${session?.user?.token}`,
+			const detailsWithOrderId = details.map((detail) => ({
+				...detail,
+				quantity: Number(detail.quantity),
+				costUnit: Number(detail.costUnit),
+			}));
+
+			const promises = [];
+
+			promises.push(
+				axios.post(
+					`http://sacoes11.test/api/orders`,
+					{
+						id: id,
+						startDate: startDate,
+						endDate: endDate,
+						description: description,
+						priority: priority,
+						idCliente: selectedCliente,
+						idSastre: selectedSastre,
+						details: detailsWithOrderId,
 					},
-				}
+					{
+						headers: {
+							"Content-Type": "application/json",
+							Accept: "application/json",
+							authorization: `Bearer ${session?.user?.token}`,
+						},
+					}
+				)
 			);
 
-			if (response.data.errors) {
-				setErrors([response.data.errors]);
+			const responses = await Promise.all(promises);
+
+			if (responses.some((response) => response.data.error)) {
+				setErrors(
+					responses
+						.filter((response) => response.data.error)
+						.map((response) => response.data.error)
+				);
 			} else {
 				onClose();
 				window.location.reload();
 			}
 		} catch (error: any) {
-			console.log(error.response.data.errors);
-			setErrors(error.response.data);
+			console.error("Error updating order:", error);
+			const errorMessage =
+				typeof error === "string"
+					? error
+					: "An error occurred. Please try again later.";
+			setErrors([errorMessage]);
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	return (
-		<Modal isOpen={isOpen} onClose={onClose} placement="top-center">
-			<ModalContent>
+		<Modal isOpen={isOpen} onClose={onClose} placement="top">
+			<ModalContent className="w-full max-w-xl">
 				<ModalHeader className="flex flex-col gap-1">
-					New User
+					Edit Order
 				</ModalHeader>
 				<ModalBody>
 					<Input
-						autoFocus
-						isRequired
-						label="Email"
+						label="Start Date"
 						variant="bordered"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
+						value={startDate}
+						onChange={(e) => setStartDate(e.target.value)}
 					/>
 					<Input
-						isRequired
-						label="Password"
+						label="End Date"
 						variant="bordered"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
+						value={endDate}
+						onChange={(e) => setEndDate(e.target.value)}
 					/>
-					<Input
-						isRequired
-						label="Name"
+					<Textarea
+						label="Description"
 						variant="bordered"
-						value={name}
-						onChange={(e) => setName(e.target.value)}
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
 					/>
-					<Input
-						isRequired
-						label="Lastname"
+					<Select
+						label="Cliente"
 						variant="bordered"
-						value={lastname}
-						onChange={(e) => setLastname(e.target.value)}
-					/>
-					<Input
-						isRequired
-						label="Address"
+						placeholder="Select the cliente"
+						selectedKeys={[selectedCliente]}
+						className="max-w-xs"
+						onChange={handleClienteChange}>
+						{clientes.map((cliente) => (
+							<SelectItem key={cliente.id} value={cliente.id}>
+								{cliente.name}
+							</SelectItem>
+						))}
+					</Select>
+					<Select
+						label="Sastre"
 						variant="bordered"
-						value={address}
-						onChange={(e) => setAddress(e.target.value)}
-					/>
-					<Input
-						isRequired
-						label="Phone"
+						placeholder="Select the sastre"
+						selectedKeys={[selectedSastre]}
+						className="max-w-xs"
+						onChange={handleSastreChange}>
+						{sastres.map((sastre) => (
+							<SelectItem key={sastre.id} value={sastre.id}>
+								{sastre.name}
+							</SelectItem>
+						))}
+					</Select>
+					<Select
+						label="Priority"
 						variant="bordered"
-						value={phone}
-						onChange={(e) => setPhone(e.target.value)}
-					/>
-					<Input
-						isRequired
-						label="CellPhone"
-						variant="bordered"
-						value={cellPhone}
-						onChange={(e) => setCellPhone(e.target.value)}
-					/>
-					<Dropdown>
-						<DropdownTrigger>
-							<Button variant="bordered" className="capitalize">
-								{selectedValue}
-							</Button>
-						</DropdownTrigger>
-						<DropdownMenu
-							aria-label="Single selection example"
-							variant="flat"
-							disallowEmptySelection
-							selectionMode="single"
-							selectedKeys={selectedKeys}
-							onSelectionChange={setSelectedKeys}>
-							<DropdownItem key="admin">Admin</DropdownItem>
-							<DropdownItem key="sastre">Sastre</DropdownItem>
-							<DropdownItem key="recepcionista">
-								Recepcionista
-							</DropdownItem>
-							<DropdownItem key="cliente">Cliente</DropdownItem>
-						</DropdownMenu>
-					</Dropdown>
-					{errors.length > 0 && (
+						placeholder="Select the priority"
+						selectedKeys={[priority]}
+						className="max-w-xs"
+						onChange={handleSelectionChange}
+						value={priority}>
+						{priorityState.map((pri) => (
+							<SelectItem key={pri.value} value={pri.value}>
+								{pri.label}
+							</SelectItem>
+						))}
+					</Select>
+					{details.map((detail, index) => (
 						<div
-							style={{
-								border: "1px solid white",
-								borderRadius: "15px",
-								backgroundColor: "red",
-								color: "white",
-								padding: "10px",
-								marginBottom: "10px",
-							}}>
-							<ul>
-								{errors.map((error, index) => (
-									<li key={index}>{error}</li>
-								))}
-							</ul>
+							key={`detail-${index}`}
+							className="border-2 p-2 rounded-xl">
+							Detail
+							<DetailForm
+								key={index}
+								detail={detail}
+								onChange={(updatedDetail) =>
+									handleDetailChange(index, updatedDetail)
+								}
+							/>
 						</div>
-					)}
+					))}
+					<Button
+						color="secondary"
+						variant="ghost"
+						onPress={handleAddDetail}>
+						Add Detail
+					</Button>
 				</ModalBody>
 				<ModalFooter>
 					<Button color="danger" variant="light" onPress={onClose}>
@@ -191,4 +267,4 @@ const NewUserModal: React.FC<NewUserModalProps> = ({ isOpen, onClose }) => {
 		</Modal>
 	);
 };
-export default NewUserModal;
+export default NewOrderModal;

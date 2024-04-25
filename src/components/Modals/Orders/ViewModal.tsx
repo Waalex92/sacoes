@@ -9,27 +9,28 @@ import {
 	ModalFooter,
 	Button,
 	Input,
+	Textarea,
 } from "@nextui-org/react";
 import { Loading } from "@/components/Loading";
 
 interface ViewModalProps {
 	isOpen: boolean;
 	onClose: () => void;
-	userId: string;
+	orderId: string;
 }
 
-const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, userId }) => {
+const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, orderId }) => {
 	const { data: session, status } = useSession();
-	const [user, setUser] = useState<any>(null);
+	const [order, setOrder] = useState<any>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		const fetchUser = async () => {
+		const fetchOrder = async () => {
 			setLoading(true);
 			try {
 				const response = await axios.get(
-					`http://sacoes11.test/api/users/${userId}`,
+					`http://sacoes11.test/api/orders/${orderId}`,
 					{
 						headers: {
 							"Content-Type": "application/json",
@@ -38,7 +39,9 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, userId }) => {
 						},
 					}
 				);
-				setUser(response.data);
+				setOrder(response.data);
+				console.log(response);
+				console.log(response.data);
 			} catch (error) {
 				console.error("Error fetching user:", error);
 				setError("An error occurred while fetching user data.");
@@ -48,69 +51,91 @@ const ViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, userId }) => {
 		};
 
 		if (isOpen) {
-			fetchUser();
+			fetchOrder();
 		}
-	}, [isOpen, userId]);
+	}, [isOpen, orderId]);
 
 	return (
-		<Modal isOpen={isOpen} onClose={onClose} placement="top-center">
+		<Modal isOpen={isOpen} onClose={onClose} placement="top">
 			<ModalContent>
 				<ModalHeader className="flex flex-col gap-1">
-					User Details
+					Order Details
 				</ModalHeader>
 				<ModalBody>
 					{loading && <Loading />}
 					{error && <p>{error}</p>}
-					{user && (
+					{order && (
 						<>
 							<Input
 								isDisabled
+								aria-multiline
 								autoFocus
-								label="Name"
+								label="Start Date"
 								variant="bordered"
-								value={user.user.name}
+								value={order.order.startDate}
 							/>
 							<Input
 								isDisabled
-								label="Lastname"
+								label="End Date"
 								variant="bordered"
-								value={user.user.lastname}
+								value={order.order.endDate}
+							/>
+							<Textarea
+								readOnly
+								label="Description"
+								variant="bordered"
+								value={order.order.description}
 							/>
 							<Input
 								isDisabled
-								label="Email"
+								label="Priority"
 								variant="bordered"
-								value={user.user.email}
+								value={order.order.priority}
 							/>
 							<Input
 								isDisabled
-								label="Address"
+								label="Admin/Receptionist"
 								variant="bordered"
-								value={user.user.address}
+								value={`${order.adminRecepcionista.name} ${order.adminRecepcionista.lastname}`}
 							/>
 							<Input
 								isDisabled
-								label="Phone"
+								label="Client"
 								variant="bordered"
-								value={user.user.phone}
+								value={`${order.cliente.name} ${order.cliente.lastname}`}
 							/>
 							<Input
 								isDisabled
-								label="CellPhone"
+								label="Tailor"
 								variant="bordered"
-								value={user.user.cellPhone}
+								value={`${order.sastre.name} ${order.sastre.lastname}`}
 							/>
-							<Input
-								isDisabled
-								label="Role"
+							<Textarea
+								readOnly
 								variant="bordered"
-								value={user.role}
-							/>
-							<Input
-								isDisabled
-								label="Active"
-								variant="bordered"
-								value={user.user.active}
+								label="Details"
+								rows={
+									order.details
+										? order.details.length * 4 + 2
+										: 2
+								} // Ajusta el número de filas según la longitud de order.details
+								value={
+									order.details &&
+									order.details
+										.map(
+											(detail: any, index: number) =>
+												`Detail ${
+													index + 1
+												}\n    Type: ${
+													detail.typeGarment
+												}\n    Quantity: ${
+													detail.quantity
+												}\n    Cost/Unit: ${
+													detail.costUnit
+												}`
+										)
+										.join("\n\n")
+								}
 							/>
 						</>
 					)}

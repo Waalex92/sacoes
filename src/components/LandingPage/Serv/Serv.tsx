@@ -5,7 +5,7 @@ import { Slider } from "./Slider";
 
 export function Serv() {
 	return (
-		<Transition className="grid px-16 py-12 md:p-24 md:grid-cols-2 md:gap-6">
+		<Transition className="grid px-4 py-8 md:py-46 md:px-36 md:grid-cols-2 md:gap-28">
 			<div className=" text-claro1 max-w-xl mb-7 " id="serv">
 				<h4 className="text-2xl font-bold">Servicios</h4>
 				<h2 className="my-4 text-3xl font-semibold">

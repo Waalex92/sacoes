@@ -3,7 +3,7 @@ import { FaRegPaperPlane } from "react-icons/fa";
 
 export function JoinCommunity() {
 	return (
-		<Transition className="grid items-center px-24 py-16 md:py-28 md:grid-cols-2 bg-gradient-to-br from-verde from-10% to-morado to-95%">
+		<Transition className="grid items-center px-4 py-8 md:py-44 md:px-36 md:grid-cols-2 bg-gradient-to-br from-verde from-10% to-morado to-95%">
 			<h3 className="max-w-lg text-5xl text-center md:text-6xl font-semibold text-claro3">
 				Únete a nuestra comunidad para enterarte de todo
 			</h3>

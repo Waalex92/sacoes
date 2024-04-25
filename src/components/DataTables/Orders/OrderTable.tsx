@@ -30,7 +30,7 @@ export default function OrderTable({ orders }: { orders: Order[] }) {
 	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [viewModalOpen, setViewModalOpen] = useState(false);
 	const [newOrderModalOpen, setNewOrderModalOpen] = useState(false);
-	//const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+	const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 	const [filterValue, setFilterValue] = useState("");
 	const hasSearchFilter = Boolean(filterValue);
 
@@ -39,21 +39,21 @@ export default function OrderTable({ orders }: { orders: Order[] }) {
 	};
 
 	const handleEditClick = (order: Order) => {
-		//setSelectedOrder(order);
+		setSelectedOrder(order);
 		setEditModalOpen(true);
+	};
+	const handleCloseEditModal = () => {
+		setSelectedOrder(null);
+		setEditModalOpen(false);
 	};
 
 	const handleViewClick = (order: Order) => {
-		//setSelectedOrder(order);
+		setSelectedOrder(order);
 		setViewModalOpen(true);
 	};
 
-	const handleCloseEditModal = () => {
-		//setSelectedOrder(null);
-		setEditModalOpen(false);
-	};
 	const handleCloseViewModal = () => {
-		//setSelectedOrder(null);
+		setSelectedOrder(null);
 		setViewModalOpen(false);
 	};
 
@@ -80,7 +80,7 @@ export default function OrderTable({ orders }: { orders: Order[] }) {
 	}, [page, filteredItems]);
 
 	const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
-		column: "description",
+		column: "id",
 		direction: "ascending",
 	});
 
@@ -161,7 +161,7 @@ export default function OrderTable({ orders }: { orders: Order[] }) {
 					{(column) => (
 						<TableColumn
 							key={column.key}
-							{...(column.key === "description"
+							{...(column.key === "id"
 								? { allowsSorting: true }
 								: {})}>
 							{column.label}
@@ -189,23 +189,20 @@ export default function OrderTable({ orders }: { orders: Order[] }) {
 					)}
 				</TableBody>
 			</Table>
-			{/**  
-			<EditModal
-				isOpen={editModalOpen}
-				onClose={handleCloseEditModal}
-				//order={selectedOrder}
-			/>
 			<ViewModal
 				isOpen={viewModalOpen}
 				onClose={handleCloseViewModal}
-				//orderId={selectedOrder ? selectedOrder.id : ""}
+				orderId={selectedOrder ? selectedOrder.id : ""}
+			/>
+			<EditModal
+				isOpen={editModalOpen}
+				onClose={handleCloseEditModal}
+				order={selectedOrder}
 			/>
 			<NewOrderModal
 				isOpen={newOrderModalOpen}
 				onClose={() => setNewOrderModalOpen(false)}
 			/>
-			 * 
-			*/}
 		</>
 	);
 }
